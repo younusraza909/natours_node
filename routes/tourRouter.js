@@ -5,7 +5,6 @@ const {
   getTour,
   updateTour,
   deleteTour,
-  checkBody,
 } = require('../controllers/tourControllers');
 
 const router = express.Router();
@@ -14,7 +13,7 @@ const router = express.Router();
 // in these types of middleware we have 4 values instead of 3 we get our params in last value in function
 // router.param('id', checkId);
 
-router.route('/').get(getAllTours).post(checkBody, createTour);
+router.route('/').get(getAllTours).post(createTour);
 router.route('/:id').get(getTour).patch(updateTour).delete(deleteTour);
 
 module.exports = router;
