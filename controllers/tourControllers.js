@@ -45,6 +45,8 @@ exports.createTour = async (req, res) => {
     // Second Method
     const newTour = await Tour.create(req.body);
 
+    //  Thing to remember that create method can take array of object to add multiple records at once
+
     res.status(201).json({
       status: 'success',
       data: {
