@@ -3,13 +3,19 @@ const Tour = require('../models/tourModel');
 exports.getAllTours = async (req, res) => {
   try {
     // Removing unwanted query string from our object
+    // 1) Filtering
     const queryObj = { ...req.query };
     const excludedFileds = ['page', 'sort', 'limit', 'fields'];
 
     excludedFileds.forEach((field) => delete queryObj[field]);
 
     // we are building query first because if use await it will execute query and return us document so we cant use other methods on it like sort , limit etc
-    const query = Tour.find(queryObj);
+    //  2)Advance Filtering
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    console.log(queryStr);
+
+    const query = Tour.find(JSON.parse(queryStr));
     // Two ways to write filtering queries
     // const query =  Tour.find({
     //   duration: 5,
