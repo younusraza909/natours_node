@@ -2,7 +2,28 @@ const Tour = require('../models/tourModel');
 
 exports.getAllTours = async (req, res) => {
   try {
-    const tours = await Tour.find();
+    // Removing unwanted query string from our object
+    const queryObj = { ...req.query };
+    const excludedFileds = ['page', 'sort', 'limit', 'fields'];
+
+    excludedFileds.forEach((field) => delete queryObj[field]);
+
+    // we are building query first because if use await it will execute query and return us document so we cant use other methods on it like sort , limit etc
+    const query = Tour.find(queryObj);
+    // Two ways to write filtering queries
+    // const query =  Tour.find({
+    //   duration: 5,
+    // });
+
+    // const query =  Tour.find()
+    //   .where('difficulty')
+    //   .equals(5)
+    //   .where('x')
+    //   .equals(1);
+
+    const tours = await query;
+
+    // Send Response
     res.status(200).json({
       status: 'success',
       results: tours.length,
