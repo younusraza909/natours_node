@@ -15,7 +15,7 @@ exports.getAllTours = async (req, res) => {
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
     console.log(queryStr);
 
-    const query = Tour.find(JSON.parse(queryStr));
+    let query = Tour.find(JSON.parse(queryStr));
     // Two ways to write filtering queries
     // const query =  Tour.find({
     //   duration: 5,
@@ -26,6 +26,17 @@ exports.getAllTours = async (req, res) => {
     //   .equals(5)
     //   .where('x')
     //   .equals(1);
+
+    //3) SORTING
+    if (req.query.sort) {
+      // In order to sort desc we have to add -sign before the key
+      //  below code is to remove , between multiple sort keys user will send price,ratings and mongoose acceopt sort('price ratings')
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
+    } else {
+      // Default Sort
+      query = query.sort('-createdAt');
+    }
 
     const tours = await query;
 
