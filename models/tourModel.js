@@ -53,6 +53,8 @@ const tourSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now(),
+    //  with select property we can permanently hide from response and mongoose will never send that
+    select: false,
   },
   startDates: {
     type: [Date],
