@@ -1,4 +1,5 @@
 const Tour = require('../models/tourModel');
+const APIFeatures = require('../utils/apiFeatures');
 
 exports.aliasTopTours = async (req, res, next) => {
   req.query.limit = '5';
@@ -10,70 +11,13 @@ exports.aliasTopTours = async (req, res, next) => {
 
 exports.getAllTours = async (req, res) => {
   try {
-    // Removing unwanted query string from our object
-    // 1) Filtering
-    const queryObj = { ...req.query };
-    const excludedFileds = ['page', 'sort', 'limit', 'fields'];
-
-    excludedFileds.forEach((field) => delete queryObj[field]);
-
-    // we are building query first because if use await it will execute query and return us document so we cant use other methods on it like sort , limit etc
-    //  2)Advance Filtering
-    let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    console.log(queryStr);
-
-    let query = Tour.find(JSON.parse(queryStr));
-    // Two ways to write filtering queries
-    // const query =  Tour.find({
-    //   duration: 5,
-    // });
-
-    // const query =  Tour.find()
-    //   .where('difficulty')
-    //   .equals(5)
-    //   .where('x')
-    //   .equals(1);
-
-    //3) SORTING
-    if (req.query.sort) {
-      // In order to sort desc we have to add -sign before the key
-      //  below code is to remove , between multiple sort keys user will send price,ratings and mongoose acceopt sort('price ratings')
-      const sortBy = req.query.sort.split(',').join(' ');
-      query = query.sort(sortBy);
-    } else {
-      // Default Sort
-      query = query.sort('-createdAt');
-    }
-
-    // 4) FIELDS LIMITING
-    if (req.query.fields) {
-      const fields = req.query.fields.split(',').join(' ');
-
-      query = query.select(fields);
-    } else {
-      // With minus we are excluding field
-      query = query.select('-__v');
-    }
-
-    // 5) PAGINATION
-    const page = req.query.page * 1 || 1;
-    const limit = req.query.limit * 1 || 100;
-
-    const skip = (page - 1) * limit;
-
-    query = query.skip(skip).limit(limit);
-
-    if (req.query.page) {
-      // To count document in a model
-      const numOfTours = await Tour.countDocuments();
-
-      if (skip > numOfTours) {
-        throw new Error('The page does not exist');
-      }
-    }
-
-    const tours = await query;
+    // Execute Query
+    const features = new APIFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .pagination();
+    const tours = await features.query;
 
     // Send Response
     res.status(200).json({
@@ -84,6 +28,7 @@ exports.getAllTours = async (req, res) => {
       },
     });
   } catch (err) {
+    console.log(err);
     res.status(404).json({
       status: 'fail',
       message: err,
