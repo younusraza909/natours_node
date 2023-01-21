@@ -1,5 +1,7 @@
+/* eslint-disable prefer-arrow-callback */
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+
 const tourSchema = new mongoose.Schema(
   {
     name: {
@@ -63,6 +65,10 @@ const tourSchema = new mongoose.Schema(
     startDates: {
       type: [Date],
     },
+    secretTour: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     // these 2 option have to be included for virtual property
@@ -93,10 +99,28 @@ tourSchema.pre('save', function (next) {
 
 // post middleware run afer all pre runs
 // in post middleware we dont have access to this keyword
-// eslint-disable-next-line prefer-arrow-callback
-tourSchema.post('save', function (doc, next) {
-  // in post middle ware we got doc and next
-  console.log(doc);
+
+// tourSchema.post('save', function (doc, next) {
+//   // in post middle ware we got doc and next
+//   console.log(doc);
+//   next();
+// });
+
+// QUERY MIDDLEWARE
+
+// we have use regular expression so an event start or container find keyword will trigger this event
+tourSchema.pre(/^find/, function (next) {
+  // Here this keyword point to query
+  this.find({ secretTour: { $ne: true } });
+
+  this.start = Date.now();
+  next();
+});
+
+// in this doc param we got all docs return
+tourSchema.post(/^find/, function (docs, next) {
+  // Here this keyword point to query
+  console.log(`Query took ${Date.now() - this.start} milliseconds!`);
   next();
 });
 
