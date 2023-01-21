@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const slugify = require('slugify');
 const tourSchema = new mongoose.Schema(
   {
     name: {
@@ -7,6 +7,9 @@ const tourSchema = new mongoose.Schema(
       required: [true, 'A tour must have a name'],
       unique: true,
       trim: true,
+    },
+    slug: {
+      type: String,
     },
     duration: {
       type: Number,
@@ -78,6 +81,23 @@ tourSchema.virtual('durationWeeks').get(function () {
   // We cant pass a arrow functio here because of this keyword
 
   return this.duration / 7;
+});
+
+// Document Middleware (it runs before the .save() command && .create() but not on .insertMany())
+tourSchema.pre('save', function (next) {
+  //  this keyword here give access to current proccessed data
+  this.slug = slugify(this.name, { lower: true });
+
+  next();
+});
+
+// post middleware run afer all pre runs
+// in post middleware we dont have access to this keyword
+// eslint-disable-next-line prefer-arrow-callback
+tourSchema.post('save', function (doc, next) {
+  // in post middle ware we got doc and next
+  console.log(doc);
+  next();
 });
 
 const Tour = mongoose.model('Tour', tourSchema);
