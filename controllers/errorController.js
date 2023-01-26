@@ -33,6 +33,13 @@ const handleCastErrorDB = (err) => {
   return new AppError(message, 400);
 };
 
+const handleDuplicateFieldsDB = (err) => {
+  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
+
+  const message = `Duplicate field value: ${value}. Please use another value!`;
+  return new AppError(message, 400);
+};
+
 module.exports = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
@@ -45,6 +52,10 @@ module.exports = (err, req, res, next) => {
     //  but in production we will not we have to prettify some error before sending it to client
     if (error.name === 'CastError') {
       error = handleCastErrorDB(error);
+    }
+    if (err.code === 11000) {
+      // For duplicate key error
+      error = handleDuplicateFieldsDB(error);
     }
 
     sendErrorProduction(error, res);
