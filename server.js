@@ -1,5 +1,17 @@
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+
+// Similarly we have uncaught exeception , those error occured in our syncronise code
+
+process.on('uncaughtException', (err) => {
+  console.log(err);
+  console.log('UNCAUGHT REJECTION! Shutting Down....');
+  // we can directly use .exit but it will shutdown all request currently running and its a bad way
+  // so we first shut server gracefully than use process.exit
+
+  process.exit(1);
+});
+
 const app = require('./app');
 
 // Setting Env Files
