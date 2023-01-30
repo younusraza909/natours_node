@@ -1,5 +1,7 @@
+/* eslint-disable import/no-extraneous-dependencies */
 const mongoose = require('mongoose');
 const validator = require('validator');
+const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -25,7 +27,24 @@ const userSchema = new mongoose.Schema({
   passwordConfirm: {
     type: String,
     required: [true, 'Please confirm your password'],
+    validate: {
+      // this only works on CREATE && SAVE!!!
+      message: 'Password and confirm password should be same',
+      validator: function (el) {
+        return el === this.password;
+      },
+    },
   },
+});
+
+userSchema.pre('save', async function (next) {
+  // in mongoose every document has isModilfied keyword to check if a certain field get the new data or in other words was modified or not
+  if (!this.isModified('password')) return next();
+
+  this.password = await bcrypt.hash(this.password, 12);
+
+  this.passwordConfirm = undefined;
+  next();
 });
 
 module.exports = mongoose.model('User', userSchema);
