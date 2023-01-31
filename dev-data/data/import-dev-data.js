@@ -17,8 +17,7 @@ mongoose
     useCreateIndex: true,
     useFindAndModify: false,
   })
-  .then((con) => {
-    console.log(con.connections);
+  .then(() => {
     console.log('DB connection successfull');
   });
 
@@ -49,7 +48,7 @@ const deleteData = async () => {
 
 if (process.argv[2] === '--import') {
   importData();
-  process.exit();
+  // process.exit();
 } else if (process.argv[2] === '--delete') {
   deleteData();
   process.exit();
