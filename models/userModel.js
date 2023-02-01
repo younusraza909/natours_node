@@ -42,9 +42,21 @@ const userSchema = new mongoose.Schema({
       },
     },
   },
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+});
+
+userSchema.pre(/^find/, function (next) {
+  // Here this keyword point to query
+  this.find({ active: { $ne: false } });
+
+  next();
 });
 
 userSchema.pre('save', async function (next) {
