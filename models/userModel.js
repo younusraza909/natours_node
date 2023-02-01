@@ -57,6 +57,14 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  // Saving to db is slower than issuing the JSON web token so we -1000(1sec) to balance it
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
 // Instance Method
 userSchema.methods.correctPassword = async function (
   candidatePassword,
