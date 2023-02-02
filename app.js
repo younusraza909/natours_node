@@ -1,5 +1,7 @@
+/* eslint-disable import/no-extraneous-dependencies */
 const express = require('express');
 const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 const tourRouter = require('./routes/tourRouter');
 const globalErrorHandler = require('./controllers/errorController');
 const userRouter = require('./routes/userRouter');
@@ -7,7 +9,8 @@ const AppError = require('./utils/appError');
 
 const app = express();
 // Express dont put body on request object by default so we have to add this middleware
-app.use(express.json());
+// we are using limit here so we cant get to many data in body
+app.use(express.json({ limit: '10kb' }));
 
 // For serving static file
 app.use(express.static(`${__dirname}/public`));
@@ -19,6 +22,9 @@ const limiter = rateLimit({
   message: 'Too Many request from this IP, please try again in an hour',
 });
 app.use('/api', limiter);
+
+// Helmet Set Security http headers
+app.use(helmet());
 
 app.use('/api/v1/tours', tourRouter);
 
