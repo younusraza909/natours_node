@@ -2,6 +2,8 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
 const tourRouter = require('./routes/tourRouter');
 const globalErrorHandler = require('./controllers/errorController');
 const userRouter = require('./routes/userRouter');
@@ -11,6 +13,11 @@ const app = express();
 // Express dont put body on request object by default so we have to add this middleware
 // we are using limit here so we cant get to many data in body
 app.use(express.json({ limit: '10kb' }));
+
+// Data Sanitization against no sql injection
+app.use(mongoSanitize());
+// Data Sanitization against XSS
+app.use(xss());
 
 // For serving static file
 app.use(express.static(`${__dirname}/public`));
