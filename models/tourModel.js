@@ -88,6 +88,37 @@ const tourSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    startLocation: {
+      // Geo JSON
+      // this object is the embeded object and not the schema type otpions
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: {
+        type: [Number],
+      },
+      address: String,
+      description: String,
+    },
+    // In order to embed document into another we need array so below we are defining array
+    // so mongodb will create new document for locations
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: {
+          type: [Number],
+        },
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
   },
   {
     // these 2 option have to be included for virtual property
