@@ -179,6 +179,17 @@ tourSchema.pre(/^find/, function (next) {
   next();
 });
 
+tourSchema.pre(/^find/, function (next) {
+  // Here this keyword point to query
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
+
+  this.start = Date.now();
+  next();
+});
+
 // in this doc param we got all docs return
 tourSchema.post(/^find/, function (docs, next) {
   // Here this keyword point to query
