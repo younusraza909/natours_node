@@ -122,6 +122,7 @@ const tourSchema = new mongoose.Schema(
     ],
     // For embedding approach
     // guides: Array,
+    guides: [{ type: mongoose.Schema.ObjectId, ref: 'User' }],
   },
   {
     // these 2 option have to be included for virtual property
