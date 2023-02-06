@@ -143,6 +143,16 @@ tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
+// Virtual Populate
+// in this scenerio we dont want to save reviews id on tour but want to access it if we get tour
+// so we use virtual populate by doing this we are saving reviews id on tour without persisting into db
+// now we can use populate on reviews while getting tour and its possible because of this new virtual field
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+});
+
 // Document Middleware (it runs before the .save() command && .create() but not on .insertMany())
 tourSchema.pre('save', function (next) {
   //  this keyword here give access to current proccessed data
