@@ -10,12 +10,26 @@ const {
   getMonthlyPlan,
 } = require('../controllers/tourControllers');
 const { protect, restrictTo } = require('../controllers/authController');
-const {
-  createReview,
-  getAllReviews,
-} = require('../controllers/reviewController');
+const reviewRouter = require('./reviewRouter');
+// const {
+//   createReview,
+//   getAllReviews,
+// } = require('../controllers/reviewController');
 
 const router = express.Router();
+
+// POST /tour/1sdf23sa/reviews
+// GET /tour/1sdf23sa/reviews
+// GET /tour/1sdf23sa/reviews/332sdf3
+
+// router
+//   .route('/:tourId/reviews')
+//   .post(protect, restrictTo('user'), createReview)
+//   .get(getAllReviews);
+
+// Implementing Nesteing Routing using express
+// but review router will not get access to tourId because of each router get access to its own params so we have to merge params
+router.use('/:tourId/reviews', reviewRouter);
 
 // Implementing Params Middleware
 // in these types of middleware we have 4 values instead of 3 we get our params in last value in function
@@ -32,14 +46,5 @@ router
   .get(getTour)
   .patch(updateTour)
   .delete(protect, restrictTo('admin', 'lead-guide'), deleteTour);
-
-// POST /tour/1sdf23sa/reviews
-// GET /tour/1sdf23sa/reviews
-// GET /tour/1sdf23sa/reviews/332sdf3
-
-router
-  .route('/:tourId/reviews')
-  .post(protect, restrictTo('user'), createReview)
-  .get(getAllReviews);
 
 module.exports = router;
