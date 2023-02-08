@@ -1,3 +1,4 @@
+const APIFeatures = require('../utils/apiFeatures');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 
@@ -52,6 +53,55 @@ exports.createOne = (Model) =>
       status: 'success',
       data: {
         data: newDoc,
+      },
+    });
+  });
+
+exports.getOne = (Model, populateOpt) =>
+  catchAsync(async (req, res, next) => {
+    let query = Model.findById(req.params.id);
+
+    if (populateOpt) {
+      query = query.populate(populateOpt);
+    }
+
+    const doc = await query;
+    // Tour.findOne({_id:req.params.id}) alternative fields
+
+    if (!doc) {
+      return next(new AppError('No document found with that ID', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        data: doc,
+      },
+    });
+  });
+
+exports.getAll = (Model) =>
+  catchAsync(async (req, res, next) => {
+    // To all for nested get reviews on tour (Only for review resource)
+
+    let filter = {};
+
+    if (req.params.tourId) filter = { tour: req.params.tourId };
+
+    // Execute Query
+    const features = new APIFeatures(Model.find(filter), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .pagination();
+    const docs = await features.query;
+
+    // Send Response
+    res.status(200).json({
+      status: 'success',
+      results: docs.length,
+      data: {
+        data: docs,
       },
     });
   });
