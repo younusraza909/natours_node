@@ -47,23 +47,7 @@ exports.getTour = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.createTour = catchAsync(async (req, res, next) => {
-  // First method to creat a tour
-  // const newTour = new Tour({});
-  // newTour.save();
-
-  // Second Method
-  const newTour = await Tour.create(req.body);
-
-  //  Thing to remember that create method can take array of object to add multiple records at once
-
-  res.status(201).json({
-    status: 'success',
-    data: {
-      tour: newTour,
-    },
-  });
-});
+exports.createTour = factory.createOne(Tour);
 
 exports.updateTour = factory.updateOne(Tour);
 

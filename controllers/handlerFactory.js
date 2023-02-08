@@ -36,3 +36,22 @@ exports.updateOne = (Model) =>
       },
     });
   });
+
+exports.createOne = (Model) =>
+  catchAsync(async (req, res, next) => {
+    // First method to creat a tour
+    // const newTour = new Tour({});
+    // newTour.save();
+
+    // Second Method
+    const newDoc = await Model.create(req.body);
+
+    //  Thing to remember that create method can take array of object to add multiple records at once
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        data: newDoc,
+      },
+    });
+  });
