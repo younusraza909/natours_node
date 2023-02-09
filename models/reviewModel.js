@@ -34,6 +34,9 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
+// Now we are making Combination unique
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
+
 // Query Middleware
 reviewSchema.pre(/^find/, function (next) {
   this.populate({
