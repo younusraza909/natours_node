@@ -84,6 +84,26 @@ reviewSchema.post(/^save/, function (next) {
   next();
 });
 
+// For update and delete we use following fucntion
+
+// findByIdAndUpdate
+// findByIdAndDelete
+
+// For them we only have query middleware and not document middleware so we have access to current query not document
+// these 2 middleware will run because findByIdAndUpdate is a shorthand for
+// findOneAndUpdate({id})
+
+reviewSchema.pre(/^findOneAnd/, async function (next) {
+  this.r = await this.findOne();
+  // console.log(this.r);
+  next();
+});
+
+reviewSchema.post(/^findOneAnd/, async function () {
+  // await this.findOne(); does NOT work here, query has already executed
+  await this.r.constructor.calcAverageRatings(this.r.tour);
+});
+
 const Review = mongoose.model('Review', reviewSchema);
 
 module.exports = Review;
