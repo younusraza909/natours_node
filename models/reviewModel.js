@@ -1,5 +1,6 @@
+/* eslint-disable prefer-arrow-callback */
 const mongoose = require('mongoose');
-// const Tour = require('./tourModel');
+const Tour = require('./tourModel');
 
 const reviewSchema = new mongoose.Schema(
   {
@@ -39,6 +40,46 @@ reviewSchema.pre(/^find/, function (next) {
     path: 'user',
     select: 'name photo',
   });
+
+  next();
+});
+
+// Instance metohd are called on instances of model
+// Static method are called on direct Model
+// Static Method
+
+reviewSchema.statics.calcAverageRatings = async function (tourId) {
+  // Here this keyword point to current Model on which it is called
+  const stats = await this.aggregate([
+    {
+      $match: { tour: tourId },
+    },
+    {
+      $group: {
+        _id: '$tour',
+        nRatings: { $sum: 1 },
+        avgRating: { $avg: '$rating' },
+      },
+    },
+  ]);
+
+  if (stats.length > 0) {
+    await Tour.findByIdAndUpdate(tourId, {
+      ratingsQuantity: stats[0].nRating,
+      ratingsAverage: stats[0].avgRating,
+    });
+  } else {
+    await Tour.findByIdAndUpdate(tourId, {
+      ratingsQuantity: 0,
+      ratingsAverage: 4.5,
+    });
+  }
+};
+
+reviewSchema.post(/^save/, function (next) {
+  // This point to current review
+  // Now aggregate is called on Model itself so we can go up from instance to model by contructor
+  this.constructor.calcAverageRatings(this.tour);
 
   next();
 });
