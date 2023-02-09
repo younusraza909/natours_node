@@ -16,6 +16,7 @@ const {
   restPassword,
   updatePassword,
   protect,
+  restrictTo,
 } = require('../controllers/authController');
 
 const router = express.Router();
@@ -26,12 +27,19 @@ router.post('/login', login);
 
 router.post('/forgotPassword', forgotPassword);
 router.patch('/resetPassword/:token', restPassword);
-router.patch('/updateMyPassword', protect, updatePassword);
 
-router.patch('/updateMe', protect, updateMe);
-router.get('/me', protect, getMe, getUser);
+// Router is like mini application
+// So we can use this middleware on router so we dont have to copy replicate code
+router.use(protect);
 
-router.delete('/deleteMe', protect, deleteMe);
+router.patch('/updateMyPassword', updatePassword);
+
+router.patch('/updateMe', updateMe);
+router.get('/me', getMe, getUser);
+
+router.delete('/deleteMe', deleteMe);
+
+router.use(restrictTo('admin'));
 
 router.route('/').get(getAllUsers).post(createUser);
 router.route('/:id').get(getUser).patch(updateUser).delete(deleteUser);
