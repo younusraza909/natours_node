@@ -155,3 +155,51 @@ exports.getToursWithin = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.getDistances = catchAsync(async (req, res, next) => {
+  const { latlng, unit } = req.params;
+
+  const multiplier = unit === 'mi' ? 0.000621371 : 0.001;
+
+  const [lat, lng] = latlng.split(',');
+
+  if (!lat || !lng) {
+    next(
+      new AppError(
+        'Please provide latitude and longitude in the correct format lat,lng',
+        400
+      )
+    );
+  }
+  // For geospecial aggragation only one stage is there and it $geoNear and it should be always first
+  // In order for geoNear atleast one property in model should have geo index
+  // we have only one field with geo index so it will be pick automatically
+  // else we have to define which key to pick
+
+  const distances = await Tour.aggregate([
+    // Geo near give me result in meter
+    {
+      $geoNear: {
+        near: {
+          type: 'Point',
+          coordinates: [lng * 1, lat * 1],
+        },
+        distanceField: 'distance',
+        distanceMultiplier: multiplier,
+      },
+    },
+    {
+      $project: {
+        distance: 1,
+        name: 1,
+      },
+    },
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      data: distances,
+    },
+  });
+});

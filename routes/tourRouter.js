@@ -9,6 +9,7 @@ const {
   aliasTopTours,
   getMonthlyPlan,
   getToursWithin,
+  getDistances,
 } = require('../controllers/tourControllers');
 const { protect, restrictTo } = require('../controllers/authController');
 const reviewRouter = require('./reviewRouter');
@@ -46,6 +47,8 @@ router
 router
   .route('/tours-within/:distance/center/:latlng/unit/:unit')
   .get(getToursWithin);
+
+router.route('/distances/:latlng/unit/:unit').get(getDistances);
 
 router
   .route('/')

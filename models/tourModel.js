@@ -142,6 +142,7 @@ const tourSchema = new mongoose.Schema(
 // 1 is acscending , -1 is descending
 tourSchema.index({ price: 1, ratingsAverage: -1 });
 tourSchema.index({ slug: 1 });
+
 // For geospecial data
 tourSchema.index({ startLocation: '2dsphere' });
 
@@ -219,12 +220,15 @@ tourSchema.post(/^find/, function (docs, next) {
 
 // Aggregation Middleware
 
-tourSchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+//We have comment this out because of geoNear aggregate middlewarre that should be
+// on top and this middleware was stopping it
 
-  console.log(this.pipeline());
-  next();
-});
+// tourSchema.pre('aggregate', function (next) {
+//   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+
+//   console.log(this.pipeline());
+//   next();
+// });
 
 const Tour = mongoose.model('Tour', tourSchema);
 
