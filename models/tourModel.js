@@ -142,6 +142,8 @@ const tourSchema = new mongoose.Schema(
 // 1 is acscending , -1 is descending
 tourSchema.index({ price: 1, ratingsAverage: -1 });
 tourSchema.index({ slug: 1 });
+// For geospecial data
+tourSchema.index({ startLocation: '2dsphere' });
 
 // Virtual Properties
 // This function is always called when we query data from database .
