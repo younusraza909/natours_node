@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const hpp = require('hpp');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
+const path = require('path');
 const tourRouter = require('./routes/tourRouter');
 const globalErrorHandler = require('./controllers/errorController');
 const userRouter = require('./routes/userRouter');
@@ -12,6 +13,15 @@ const reviewRouter = require('./routes/reviewRouter');
 const AppError = require('./utils/appError');
 
 const app = express();
+
+// Express support most common templating engines by default and PUG is one of them
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
+
+// For serving static file
+// app.use(express.static(`${__dirname}/public`));
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Express dont put body on request object by default so we have to add this middleware
 // we are using limit here so we cant get to many data in body
 app.use(express.json({ limit: '10kb' }));
@@ -35,9 +45,6 @@ app.use(
   })
 );
 
-// For serving static file
-app.use(express.static(`${__dirname}/public`));
-
 // Rate Limiter
 const limiter = rateLimit({
   max: 100,
@@ -49,8 +56,11 @@ app.use('/api', limiter);
 // Helmet Set Security http headers
 app.use(helmet());
 
-app.use('/api/v1/tours', tourRouter);
+app.get('/', (req, res, next) => {
+  res.status(200).render('base');
+});
 
+app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
 
