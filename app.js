@@ -1,37 +1,57 @@
-/* eslint-disable import/no-extraneous-dependencies */
+const path = require('path');
 const express = require('express');
+const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
-const hpp = require('hpp');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
-const path = require('path');
-const tourRouter = require('./routes/tourRouter');
-const globalErrorHandler = require('./controllers/errorController');
-const userRouter = require('./routes/userRouter');
-const reviewRouter = require('./routes/reviewRouter');
+const hpp = require('hpp');
+const cookieParser = require('cookie-parser');
+
 const AppError = require('./utils/appError');
+const globalErrorHandler = require('./controllers/errorController');
+const tourRouter = require('./routes/tourRoutes');
+const userRouter = require('./routes/userRoutes');
+const reviewRouter = require('./routes/reviewRoutes');
+const viewRouter = require('./routes/viewRoutes');
 
 const app = express();
 
-// Express support most common templating engines by default and PUG is one of them
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
-// For serving static file
-// app.use(express.static(`${__dirname}/public`));
+// 1) GLOBAL MIDDLEWARES
+// Serving static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Express dont put body on request object by default so we have to add this middleware
-// we are using limit here so we cant get to many data in body
-app.use(express.json({ limit: '10kb' }));
+// Set security HTTP headers
+app.use(helmet());
 
-// Data Sanitization against no sql injection
+// Development logging
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+}
+
+// Limit requests from same API
+const limiter = rateLimit({
+  max: 100,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many requests from this IP, please try again in an hour!'
+});
+app.use('/api', limiter);
+
+// Body parser, reading data from body into req.body
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(cookieParser());
+
+// Data sanitization against NoSQL query injection
 app.use(mongoSanitize());
-// Data Sanitization against XSS
+
+// Data sanitization against XSS
 app.use(xss());
 
-// Prevent Parameter pollution
+// Prevent parameter pollution
 app.use(
   hpp({
     whitelist: [
@@ -40,51 +60,28 @@ app.use(
       'ratingsAverage',
       'maxGroupSize',
       'difficulty',
-      'price',
-    ],
+      'price'
+    ]
   })
 );
 
-// Rate Limiter
-const limiter = rateLimit({
-  max: 100,
-  windowMs: 60 * 60 * 1000,
-  message: 'Too Many request from this IP, please try again in an hour',
-});
-app.use('/api', limiter);
-
-// Helmet Set Security http headers
-app.use(helmet());
-
-app.get('/', (req, res, next) => {
-  res.status(200).render('base');
+// Test middleware
+app.use((req, res, next) => {
+  req.requestTime = new Date().toISOString();
+  console.log(req.cookies);
+  next();
 });
 
+// 3) ROUTES
+app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
 
 app.all('*', (req, res, next) => {
-  // res.status(404).json({
-  //   status: 'fail',
-  //   message: `Can't find ${req.originalUrl} on the sever!`,
-  // });
-
-  // In order to call our error handling middleware
-  const err = new AppError(`Can't find ${req.originalUrl} on the sever!`, 404);
-
-  //  we remove this code because we have make our own class
-  // const err = new AppError(`Can't find ${req.originalUrl} on the sever!`);
-  // err.status = 'fail';
-  // err.statusCode = 404;
-
-  // if we pass anything in next node will consider that there was an error and call that error handling middleware
-  // it applies for all the next in each and every middleware
-  // it will skip all the middleware in the stack and jump to error handling middleware
-  next(err);
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
-// Error Handling Middleware
 app.use(globalErrorHandler);
 
 module.exports = app;

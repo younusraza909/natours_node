@@ -1,50 +1,37 @@
-const dotenv = require('dotenv');
 const mongoose = require('mongoose');
-
-// Similarly we have uncaught exeception , those error occured in our syncronise code
+const dotenv = require('dotenv');
 
 process.on('uncaughtException', (err) => {
-  console.log(err);
-  console.log('UNCAUGHT REJECTION! Shutting Down....');
-  // we can directly use .exit but it will shutdown all request currently running and its a bad way
-  // so we first shut server gracefully than use process.exit
-
+  console.log('UNCAUGHT EXCEPTION! 💥 Shutting down...');
+  console.log(err.name, err.message);
   process.exit(1);
 });
 
+dotenv.config({ path: './config.env' });
 const app = require('./app');
 
-// Setting Env Files
-dotenv.config({ path: './config.env' });
-
-// Connecting Mongoose
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
   process.env.DATABASE_PASSWORD
 );
+
 mongoose
   .connect(DB, {
     useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: false,
+    useUnifiedTopology: true,
   })
-  .then(() => {
-    console.log('DB connection successfull');
-  });
+  .then(() => console.log('DB connection successful!'));
 
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
-  console.log(`App running on port ${port}`);
+  console.log(`App running on port ${port}...`);
 });
 
-// There might be some promise in our code which get rejected but not get handled by us
-//  in node event we have a event that will trigger every time such type of scenario is created
-
 process.on('unhandledRejection', (err) => {
+  console.log('UNHANDLED REJECTION! 💥 Shutting down...');
   console.log(err.name, err.message);
-  console.log('UNHANDLED REJECTION! Shutting Down....');
-  // we can directly use .exit but it will shutdown all request currently running and its a bad way
-  // so we first shut server gracefully than use process.exit
   server.close(() => {
     process.exit(1);
   });
